@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitaExpress.pro - Automatice Su Recepción Médica 24/7</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Medical Theme Colors */
+        :root {
+            --medical-blue: #3498db;
+            --medical-green: #27ae60;
+            --medical-red: #e74c3c;
+            --medical-orange: #f39c12;
+            --medical-dark: #2c3e50;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Glassmorphism Effect */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(44, 62, 80, 0.37);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+        }
+
+        .nav-links a:hover {
+            background: var(--glass-bg);
+        }
+
+        .login-btn {
+            background: var(--medical-blue);
+            color: white !important;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 1000px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #3498db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--medical-orange);
+            font-weight: bold;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-card {
+            padding: 2rem;
+            text-align: center;
+            border-radius: 15px;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--medical-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: white;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            background: linear-gradient(45deg, var(--medical-blue), #2980b9);
+            color: white;
+            padding: 1.2rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(52, 152, 219, 0.4);
+        }
+
+        .cta-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        /* ROI Calculator */
+        .roi-section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .calculator {
+            padding: 3rem;
+            margin: 2rem 0;
+        }
+
+        .calculator h3 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .calc-input {
+            margin-bottom: 1.5rem;
+        }
+
+        .calc-input label {
+            display: block;
+            color: white;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .calc-input input, .calc-input select {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+        }
+
+        .roi-results {
+            background: linear-gradient(45deg, var(--medical-green), #2ecc71);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        .roi-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Features Grid */
+        .features {
+            padding: 4rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .feature-card p {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 4rem 2rem;
+            background: linear-gradient(45deg, var(--medical-dark), #34495e);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonial {
+            padding: 2rem;
+            border-left: 4px solid var(--medical-green);
+        }
+
+        .testimonial-text {
+            font-size: 1.2rem;
+            color: white;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            color: var(--medical-blue);
+            font-weight: bold;
+        }
+
+        /* Pricing */
+        .pricing {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .pricing h2 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .pricing-card {
+            padding: 3rem;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .price-tag {
+            background: var(--medical-green);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+
+        .price-breakdown {
+            text-align: left;
+            margin: 2rem 0;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .total-price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--medical-green);
+            margin: 1rem 0;
+        }
+
+        /* Demo Section */
+        .demo {
+            padding: 4rem 2rem;
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+        }
+
+        .demo-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .demo h2 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .demo-phone {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 2px solid var(--glass-border);
+        }
+
+        .phone-screen {
+            background: #000;
+            color: #00ff00;
+            padding: 2rem;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .demo-btn {
+            background: var(--medical-blue);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .demo-btn:hover {
+            background: #2980b9;
+        }
+
+        /* App Preview */
+        .app-preview {
+            padding: 4rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .app-preview h2 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .app-screenshots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .screenshot {
+            background: var(--glass-bg);
+            border-radius: 15px;
+            padding: 1rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        .screenshot img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .screenshot h4 {
+            color: white;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .calc-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Floating elements */
+        .floating {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .floating-1 {
+            top: 20%;
+            left: 10%;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-2 {
+            top: 60%;
+            right: 15%;
+            font-size: 1.5rem;
+            opacity: 0.1;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Elements -->
+    <div class="floating floating-1">🏥</div>
+    <div class="floating floating-2">📞</div>
+
+    <!-- Header -->
+    <header class="header glass-dark">
+        <nav class="nav">
+            <a href="#" class="logo">CitaExpress.pro</a>
+            <ul class="nav-links">
+                <li><a href="#features">Características</a></li>
+                <li><a href="#demo">Demo</a></li>
+                <li><a href="#pricing">Precios</a></li>
+                <li><a href="#" class="login-btn" onclick="showLoginModal()">Acceso Clínicas</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content fade-in-up">
+            <h1>¿Cuántas Citas Perdió Su Clínica La Semana Pasada?</h1>
+            <div class="subtitle">Mientras pierde €2,400 mensuales en citas no atendidas</div>
+            <p>Clínicas inteligentes automatizan su recepción 24/7 y aumentan su facturación 47% con CitaExpress.pro</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card glass">
+                    <div class="stat-number">+47%</div>
+                    <div class="stat-label">Más Citas</div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-number">-73%</div>
+                    <div class="stat-label">Llamadas Perdidas</div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-number">0%</div>
+                    <div class="stat-label">Errores</div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Disponibilidad</div>
+                </div>
+            </div>
+            
+            <a href="#demo" class="cta-button">🎧 Ver Demo en Vivo</a>
+            <button class="cta-button cta-secondary" onclick="showPricingModal()">💰 Calcular ROI</button>
+        </div>
+    </section>
+
+    <!-- ROI Calculator -->
+    <section class="roi-section" id="calculator">
+        <div class="calculator glass">
+            <h3>🧮 Calcule Su ROI Exacto</h3>
+            <div class="calc-grid">
+                <div>
+                    <div class="calc-input">
+                        <label>Especialidad Médica</label>
+                        <select id="specialty" onchange="calculateROI()">
+                            <option value="dermatologia">Dermatología</option>
+                            <option value="ginecologia">Ginecología</option>
+                            <option value="odontologia">Odontología</option>
+                            <option value="medicina_general">Medicina General</option>
+                        </select>
+                    </div>
+                    <div class="calc-input">
+                        <label>Llamadas perdidas/día</label>
+                        <input type="number" id="lostCalls" value="8" min="1" max="50" onchange="calculateROI()">
+                    </div>
+                    <div class="calc-input">
+                        <label>Precio consulta promedio (€)</label>
+                        <input type="number" id="consultPrice" value="180" min="50" max="500" onchange="calculateROI()">
+                    </div>
+                    <div class="calc-input">
+                        <label>Días laborables/mes</label>
+                        <input type="number" id="workDays" value="22" min="15" max="30" onchange="calculateROI()">
+                    </div>
+                </div>
+                <div class="roi-results">
+                    <h4>📈 Su ROI Mensual</h4>
+                    <div class="roi-number" id="monthlyRevenue">€4,500</div>
+                    <div>Ingresos adicionales/mes</div>
+                    <hr style="margin: 1rem 0; border-color: rgba(255,255,255,0.3);">
+                    <div style="font-size: 1.5rem; margin: 1rem 0;">
+                        Inversión: <span style="color: #ffeb3b;">€439</span>/mes
+                    </div>
+                    <div style="font-size: 2rem; font-weight: bold; color: #4caf50;">
+                        ROI: <span id="roiPercent">925%</span>
+                    </div>
+                    <div style="margin-top: 1rem; font-size: 0.9rem;">
+                        La inversión se recupera en <span id="paybackDays">18</span> días
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <h2>🏥 Tecnología Médica de Vanguardia</h2>
+        <div class="features-grid">
+            <div class="feature-card glass">
+                <div class="feature-icon">🤖</div>
+                <h3>IA Médica Especializada</h3>
+                <p>Asistente entrenado específicamente para cada especialidad. Conoce protocolos, urgencias, y maneja terminología médica con precisión.</p>
+            </div>
+            
+            <div class="feature-card glass">
+                <div class="feature-icon">📅</div>
+                <h3>Gestión Inteligente de Agenda</h3>
+                <p>Integración directa con su sistema de citas. Optimiza horarios automáticamente y evita conflictos de agenda.</p>
+            </div>
+            
+            <div class="feature-card glass">
+                <div class="feature-icon">🔐</div>
+                <h3>RGPD y Seguridad Médica</h3>
+                <p>Cumplimiento total con normativas de protección de datos sanitarios. Encriptación end-to-end y auditorías certificadas.</p>
+            </div>
+            
+            <div class="feature-card glass">
+                <div class="feature-icon">📊</div>
+                <h3>Analytics ROI en Tiempo Real</h3>
+                <p>Dashboard con métricas de conversión, ingresos generados, llamadas atendidas y análisis predictivo de demanda.</p>
+            </div>
+            
+            <div class="feature-card glass">
+                <div class="feature-icon">🚨</div>
+                <h3>Protocolo de Urgencias</h3>
+                <p>Reconocimiento automático de emergencias médicas con escalado inmediato al personal médico disponible.</p>
+            </div>
+            
+            <div class="feature-card glass">
+                <div class="feature-icon">🌍</div>
+                <h3>Multiidioma y Accesibilidad</h3>
+                <p>Atiende en español, catalán, inglés. Soporte para personas con discapacidad auditiva via SMS automático.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo" id="demo">
+        <div class="demo-container">
+            <h2>🎧 Escuche Cómo Funciona en Su Clínica</h2>
+            <p style="color: white; font-size: 1.2rem; margin-bottom: 2rem;">
+                Simulación real de una llamada típica a su consulta
+            </p>
+            
+            <div class="demo-phone glass">
+                <div class="phone-screen" id="demoScreen">
+                    <div>📞 LLAMADA ENTRANTE: +34 654 789 123</div>
+                    <div style="margin: 1rem 0; color: #3498db;">
+                        🤖 CitaExpress.pro: "Buenos días, clínica dermatológica Dr. García, le atiende la asistente virtual. ¿En qué puedo ayudarle?"
+                    </div>
+                    <div style="color: #f39c12;">
+                        👤 Paciente: "Hola, necesito una cita para revisión de lunares"
+                    </div>
+                    <div style="margin: 1rem 0; color: #3498db;">
+                        🤖 CitaExpress.pro: "Perfecto. Para optimizar su consulta, ¿ha notado cambios recientes en algún lunar?"
+                    </div>
+                    <div style="color: #f39c12;">
+                        👤 Paciente: "Sí, uno en el brazo ha crecido"
+                    </div>
+                    <div style="margin: 1rem 0; color: #27ae60;">
+                        ✅ RESULTADO: Cita agendada para mañana 10:30am<br>
+                        ✅ Protocolo pre-consulta enviado por SMS<br>
+                        ✅ Recordatorio automático programado
+                    </div>
+                </div>
+                
+                <div class="demo-controls">
+                    <button class="demo-btn" onclick="playDemo('dermatologia')">🔬 Demo Dermatología</button>
+                    <button class="demo-btn" onclick="playDemo('ginecologia')">👶 Demo Ginecología</button>
+                    <button class="demo-btn" onclick="playDemo('odontologia')">🦷 Demo Odontología</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="testimonials-grid">
+            <div class="testimonial glass">
+                <div class="testimonial-text">
+                    "En 2 meses pasé de 45 a 67 consultas semanales. CitaExpress.pro me dio 6 horas extra para atender pacientes. Mi facturación subió €18,000 mensual."
+                </div>
+                <div class="testimonial-author">Dr. Carlos Martínez, Dermatólogo - Madrid</div>
+            </div>
+            
+            <div class="testimonial glass">
+                <div class="testimonial-text">
+                    "Reduje 84% las llamadas perdidas. Las pacientes aman la atención 24h. Mi agenda está completa 3 semanas adelante. ROI: 340%"
+                </div>
+                <div class="testimonial-author">Dra. Ana López, Ginecóloga - Barcelona</div>
+            </div>
+            
+            <div class="testimonial glass">
+                <div class="testimonial-text">
+                    "Automatizamos urgencias nocturnas. El sistema agenda automáticamente y envía protocolos pre-consulta. +€12,000 mensuales solo en urgencias."
+                </div>
+                <div class="testimonial-author">Clínica Dental Integral - Valencia</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Preview -->
+    <section class="app-preview">
+        <h2>📱 Su Dashboard de Control</h2>
+        <div class="app-screenshots">
+            <div class="screenshot glass">
+                <div style="background: linear-gradient(45deg, #3498db, #2980b9); height: 200px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                    📊 Analytics ROI
+                </div>
+                <h4>Métricas en Tiempo Real</h4>
+            </div>
+            
+            <div class="screenshot glass">
+                <div style="background: linear-gradient(45deg, #27ae60, #2ecc71); height: 200px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                    📅 Gestión Citas
+                </div>
+                <h4>Control de Agenda</h4>
+            </div>
+            
+            <div class="screenshot glass">
+                <div style="background: linear-gradient(45deg, #f39c12, #e67e22); height: 200px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                    ⚙️ Configuración IA
+                </div>
+                <h4>Personalización Completa</h4>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+        <h2>💰 Inversión que se Recupera en 18 Días</h2>
+        <div class="pricing-card glass">
+            <div class="price-tag">
+                🚀 Paquete Todo Incluido
+            </div>
+            
+            <div class="price-breakdown">
+                <div class="price-item">
+                    <span>Configuración completa + VAPI</span>
+                    <span>€150</span>
+                </div>
+                <div class="price-item">
+                    <span>Primer mes de servicio</span>
+                    <span>€79</span>
+                </div>
+                <div class="price-item">
+                    <span>Integración con su agenda</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>Entrenamiento especializado</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>Soporte prioritario 30 días</span>
+                    <span>GRATIS</span>
+                </div>
+            </div>
+            
+            <div class="total-price">
+                Total primer mes: €229
+            </div>
+            
+            <p style="color: white; margin: 1rem 0;">
+                Luego solo €79/mes • Sin permanencia • Cancele cuando quiera
+            </p>
+            
+            <button class="cta-button" onclick="initializeStripeCheckout()" style="width: 100%; margin-top: 2rem;">
+                🏥 Activar CitaExpress.pro Ahora
+            </button>
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: rgba(39, 174, 96, 0.2); border-radius: 10px; color: white;">
+                <strong>⚡ Garantía Total:</strong><br>
+                • Resultados en 24 horas o reembolso<br>
+                • ROI mínimo 200% en 60 días<br>
+                • Soporte médico especializado
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="close-modal" onclick="hideLoginModal()">&times;</button>
+            <h2 style="text-align: center; margin-bottom: 2rem;">🏥 Acceso Clínicas</h2>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Email de la clínica:</label>
+                    <input type="email" id="email" required style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem;">
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Contraseña:</label>
+                    <input type="password" id="password" required style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem;">
+                </div>
+                
+                <button type="submit" style="width: 100%; padding: 1rem; background: var(--medical-blue); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
+                    Acceder al Dashboard
+                </button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="#" onclick="showSignupModal()" style="color: var(--medical-blue); text-decoration: none;">
+                    ¿Primera vez? Registrar nueva clínica
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal-overlay" id="signupModal">
+        <div class="modal">
+            <button class="close-modal" onclick="hideSignupModal()">&times;</button>
+            <h2 style="text-align: center; margin-bottom: 2rem;">🏥 Registro Nueva Clínica</h2>
+            
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Nombre de la clínica:</label>
+                    <input type="text" id="clinicName" required style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 10px;">
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Email responsable:</label>
+                    <input type="email" id="signupEmail" required style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 10px;">
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Teléfono clínica:</label>
+                    <input type="tel" id="clinicPhone" required style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 10px;">
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Especialidad:</label>
+                    <select id="clinicSpecialty" required style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 10px;">
+                        <option value="">Seleccione especialidad</option>
+                        <option value="dermatologia">Dermatología</option>
+                        <option value="ginecologia">Ginecología</option>
+                        <option value="odontologia">Odontología</option>
+                        <option value="medicina_general">Medicina General</option>
+                        <option value="traumatologia">Traumatología</option>
+                        <option value="cardiologia">Cardiología</option>
+                        <option value="otro">Otra especialidad</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Contraseña:</label>
+                    <input type="password" id="signupPassword" required style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 10px;">
+                </div>
+                
+                <button type="submit" style="width: 100%; padding: 1rem; background: var(--medical-green); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer;">
+                    Crear Cuenta y Activar ServicioDemo
+                </button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                Al registrarse acepta nuestros términos de servicio y política de privacidad médica
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Stripe Configuration
+        const STRIPE_PUBLIC_KEY = 'pk_live_51Rqf4z0onb4SjYDIHfyAJJNbUK7xEgWIP6NsZnAPtv7HY6HvhsI8M08bOexKvMY5wacjTcVFJHf6MowEZkF3gKI2001CPmCSRf';
+        let stripe;
+
+        // Initialize Stripe
+        function initializeStripe() {
+            try {
+                stripe = Stripe(STRIPE_PUBLIC_KEY);
+                console.log('✅ Stripe initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('❌ Stripe initialization failed:', error);
+                return false;
+            }
+        }
+
+        // ROI Calculator
+        function calculateROI() {
+            const specialty = document.getElementById('specialty').value;
+            const lostCalls = parseInt(document.getElementById('lostCalls').value) || 8;
+            const consultPrice = parseInt(document.getElementById('consultPrice').value) || 180;
+            const workDays = parseInt(document.getElementById('workDays').value) || 22;
+            
+            // Calculate based on specialty and conversion rates
+            const conversionRates = {
+                'dermatologia': 0.45,
+                'ginecologia': 0.42,
+                'odontologia': 0.50,
+                'medicina_general': 0.38
+            };
+            
+            const conversionRate = conversionRates[specialty] || 0.42;
+            const monthlyCitas = lostCalls * workDays * conversionRate;
+            const monthlyRevenue = Math.round(monthlyCitas * consultPrice);
+            const investment = 229; // Setup + first month
+            const roi = Math.round(((monthlyRevenue - investment) / investment) * 100);
+            const paybackDays = Math.round((investment / (monthlyRevenue / 30)));
+            
+            document.getElementById('monthlyRevenue').textContent = `€${monthlyRevenue.toLocaleString()}`;
+            document.getElementById('roiPercent').textContent = `${roi}%`;
+            document.getElementById('paybackDays').textContent = paybackDays;
+        }
+
+        // Demo System
+        const demoScripts = {
+            dermatologia: [
+                "📞 LLAMADA ENTRANTE: +34 654 789 123",
+                "🤖 CitaExpress.pro: 'Buenos días, clínica dermatológica Dr. García, le atiende la asistente virtual. ¿En qué puedo ayudarle?'",
+                "👤 Paciente: 'Hola, necesito una cita para revisión de lunares'",
+                "🤖 CitaExpress.pro: 'Perfecto. Para optimizar su consulta, ¿ha notado cambios recientes en algún lunar?'",
+                "👤 Paciente: 'Sí, uno en el brazo ha crecido'",
+                "🤖 CitaExpress.pro: 'Entiendo, es importante revisarlo pronto. Tengo disponibilidad mañana a las 10:30 o el jueves a las 16:00. ¿Cuál prefiere?'",
+                "👤 Paciente: 'Mañana por favor'",
+                "✅ RESULTADO: Cita agendada para mañana 10:30am\n✅ Protocolo pre-consulta enviado por SMS\n✅ Recordatorio automático programado\n✅ URGENCIA ALTA detectada automáticamente"
+            ],
+            ginecologia: [
+                "📞 LLAMADA ENTRANTE: +34 612 345 678",
+                "🤖 CitaExpress.pro: 'Buenos días, consulta ginecológica Dra. Martínez, ¿en qué puedo ayudarle?'",
+                "👤 Paciente: 'Quería pedir cita para revisión del embarazo'",
+                "🤖 CitaExpress.pro: '¡Enhorabuena! ¿De cuántas semanas está aproximadamente?'",
+                "👤 Paciente: 'Creo que de unas 12 semanas'",
+                "🤖 CitaExpress.pro: 'Perfecto, es momento para la primera ecografía. Tengo hueco este viernes a las 11:00. ¿Le va bien?'",
+                "👤 Paciente: 'Sí, perfecto'",
+                "✅ RESULTADO: Cita agendada viernes 11:00am\n✅ Protocolo pre-natal enviado por SMS\n✅ Recordatorio 24h antes\n✅ Preparación ecografía incluida"
+            ],
+            odontologia: [
+                "📞 LLAMADA ENTRANTE: +34 698 741 852",
+                "🤖 CitaExpress.pro: 'Clínica Dental Sonrisa, ¿en qué puedo ayudarle?'",
+                "👤 Paciente: 'Tengo un dolor de muelas terrible'",
+                "🤖 CitaExpress.pro: 'Lo siento mucho. ¿El dolor es constante o solo al masticar?'",
+                "👤 Paciente: 'Constante, desde ayer por la noche'",
+                "🤖 CitaExpress.pro: 'Entiendo que es urgente. Puedo ofrecerle una cita de urgencia hoy a las 14:30. ¿Puede venir?'",
+                "👤 Paciente: 'Sí, por favor'",
+                "✅ RESULTADO: URGENCIA agendada hoy 14:30\n✅ Protocolo dolor enviado por SMS\n✅ Preparación consulta urgente\n✅ Aviso inmediato al dentista"
+            ]
+        };
+
+        function playDemo(specialty) {
+            const screen = document.getElementById('demoScreen');
+            const script = demoScripts[specialty];
+            let lineIndex = 0;
+            
+            screen.innerHTML = '';
+            
+            function showNextLine() {
+                if (lineIndex < script.length) {
+                    const line = script[lineIndex];
+                    const div = document.createElement('div');
+                    div.style.margin = '0.5rem 0';
+                    
+                    if (line.includes('🤖')) {
+                        div.style.color = '#3498db';
+                    } else if (line.includes('👤')) {
+                        div.style.color = '#f39c12';
+                    } else if (line.includes('✅')) {
+                        div.style.color = '#27ae60';
+                    } else {
+                        div.style.color = '#00ff00';
+                    }
+                    
+                    div.textContent = line;
+                    screen.appendChild(div);
+                    screen.scrollTop = screen.scrollHeight;
+                    
+                    lineIndex++;
+                    setTimeout(showNextLine, 1500);
+                }
+            }
+            
+            showNextLine();
+        }
+
+        // Modal Functions
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
+        function showSignupModal() {
+            hideLoginModal();
+            document.getElementById('signupModal').style.display = 'flex';
+        }
+
+        function hideSignupModal() {
+            document.getElementById('signupModal').style.display = 'none';
+        }
+
+        function showPricingModal() {
+            document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Form Handlers
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Simulate login (in real app, this would call your backend)
+            alert(`🔐 Acceso en desarrollo\n\nEmail: ${email}\n\nEn la versión completa, esto abriría su dashboard personalizado con:\n\n📊 Analytics en tiempo real\n📅 Gestión de citas\n⚙️ Configuración IA\n💰 Métricas ROI`);
+            hideLoginModal();
+        }
+
+        function handleSignup(event) {
+            event.preventDefault();
+            const clinicName = document.getElementById('clinicName').value;
+            const email = document.getElementById('signupEmail').value;
+            const phone = document.getElementById('clinicPhone').value;
+            const specialty = document.getElementById('clinicSpecialty').value;
+            
+            // Simulate signup (in real app, this would create account and trigger onboarding)
+            alert(`🏥 Registro exitoso!\n\nClínica: ${clinicName}\nEspecialidad: ${specialty}\n\n✅ Su cuenta ha sido creada\n✅ Recibirá llamada en 15 minutos para configuración\n✅ Demo personalizado activado\n\nEn breve nuestro equipo técnico le contactará para:\n1. Configurar su IA especializada\n2. Integrar con su sistema de citas\n3. Entrenar el asistente con su protocolo\n4. Activar el servicio 24/7`);
+            hideSignupModal();
+        }
+
+        // Stripe Checkout
+        async function initializeStripeCheckout() {
+            if (!stripe) {
+                if (!initializeStripe()) {
+                    alert('❌ Error: No se pudo inicializar el sistema de pago. Inténtelo de nuevo.');
+                    return;
+                }
+            }
+            
+            try {
+                const sessionConfig = {
+                    lineItems: [{
+                        price: 'price_1RuJJL0onb4SjYDIaEQPikSA', // Setup price €150
+                        quantity: 1,
+                    }],
+                    mode: 'payment',
+                    successUrl: window.location.origin + window.location.pathname + '?success=true',
+                    cancelUrl: window.location.origin + window.location.pathname,
+                    billingAddressCollection: 'required',
+                    customerEmail: null,
+                };
+                
+                const result = await stripe.redirectToCheckout(sessionConfig);
+
+                if (result.error) {
+                    alert(`❌ Error de pago: ${result.error.message}`);
+                }
+            } catch (error) {
+                alert(`💥 Error técnico: ${error.message}`);
+            }
+        }
+
+        // Check for successful payment
+        function checkPaymentSuccess() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                alert('🎉 ¡Pago procesado exitosamente!\n\n✅ Su cuenta CitaExpress.pro ha sido activada\n✅ Recibirá llamada en los próximos 15 minutos\n✅ Configuración iniciada automáticamente\n\nNuestro equipo técnico le contactará para:\n• Configurar su IA médica especializada\n• Integrar con su sistema actual\n• Entrenar el asistente\n• Activar servicio 24/7\n\n¡Bienvenido a la revolución médica digital!');
+            }
+        }
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            console.log('🏥 CitaExpress.pro loaded');
+            initializeStripe();
+            calculateROI();
+            checkPaymentSuccess();
+            
+            // Auto-play demo after 3 seconds
+            setTimeout(() => {
+                playDemo('dermatologia');
+            }, 3000);
+        });
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
